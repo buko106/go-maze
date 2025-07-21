@@ -113,3 +113,46 @@ func TestMazeDimensions(t *testing.T) {
 		})
 	}
 }
+
+// Test seed functionality - should produce same maze for same seed
+func TestSeedReproducibility(t *testing.T) {
+	seedValue := "12345"
+	
+	// Generate maze twice with same seed
+	cmd1 := exec.Command("go", "run", "main.go", "--seed", seedValue, "-s", "9")
+	output1, err1 := cmd1.Output()
+	if err1 != nil {
+		t.Fatalf("First run failed: %v", err1)
+	}
+	
+	cmd2 := exec.Command("go", "run", "main.go", "--seed", seedValue, "-s", "9")
+	output2, err2 := cmd2.Output()
+	if err2 != nil {
+		t.Fatalf("Second run failed: %v", err2)
+	}
+	
+	if string(output1) != string(output2) {
+		t.Error("Same seed should produce identical mazes")
+		t.Logf("Output1:\n%s", string(output1))
+		t.Logf("Output2:\n%s", string(output2))
+	}
+}
+
+// Test different seeds produce different mazes
+func TestDifferentSeedsDifferentMazes(t *testing.T) {
+	cmd1 := exec.Command("go", "run", "main.go", "--seed", "111", "-s", "9")
+	output1, err1 := cmd1.Output()
+	if err1 != nil {
+		t.Fatalf("First run failed: %v", err1)
+	}
+	
+	cmd2 := exec.Command("go", "run", "main.go", "--seed", "222", "-s", "9")
+	output2, err2 := cmd2.Output()
+	if err2 != nil {
+		t.Fatalf("Second run failed: %v", err2)
+	}
+	
+	if string(output1) == string(output2) {
+		t.Error("Different seeds should produce different mazes")
+	}
+}

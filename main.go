@@ -11,6 +11,7 @@ import (
 func main() {
 	size := flag.Int("s", 21, "Size of the square maze (must be odd, minimum 5)")
 	flag.IntVar(size, "size", 21, "Size of the square maze (must be odd, minimum 5)")
+	seed := flag.String("seed", "", "Seed for reproducible maze generation (integer)")
 	flag.Parse()
 
 	// Validate size
@@ -23,7 +24,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	generator := maze.NewGenerator()
+	var generator *maze.Generator
+	if *seed != "" {
+		generator = maze.NewGeneratorWithSeed(*seed)
+	} else {
+		generator = maze.NewGenerator()
+	}
+	
 	m := generator.Generate(*size, *size)
 	fmt.Print(m.String())
 }
