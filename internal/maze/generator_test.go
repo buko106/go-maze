@@ -61,19 +61,19 @@ func TestMazeString(t *testing.T) {
 func TestMazePathConnectivity(t *testing.T) {
 	generator := NewGeneratorWithSeed("123") // Use seed for reproducible testing
 	maze := generator.Generate(7, 7)
-	
+
 	// Find all path cells (non-wall cells)
 	pathCells := findPathCells(maze)
 	if len(pathCells) == 0 {
 		t.Error("Maze should have at least one path cell")
 		return
 	}
-	
+
 	// Test that all path cells are connected
 	visited := make(map[[2]int]bool)
 	startCell := pathCells[0]
 	dfsVisit(maze, startCell[0], startCell[1], visited)
-	
+
 	// Check if all path cells were visited (i.e., all are connected)
 	for _, cell := range pathCells {
 		if !visited[cell] {
@@ -106,9 +106,9 @@ func dfsVisit(maze *Maze, row, col int, visited map[[2]int]bool) {
 	if visited[[2]int{row, col}] {
 		return
 	}
-	
+
 	visited[[2]int{row, col}] = true
-	
+
 	// Visit neighbors
 	dfsVisit(maze, row-1, col, visited) // up
 	dfsVisit(maze, row+1, col, visited) // down
@@ -121,14 +121,14 @@ func TestMazeStartGoalMarkers(t *testing.T) {
 	generator := NewGeneratorWithSeed("123")
 	maze := generator.Generate(7, 7)
 	output := maze.String()
-	
+
 	lines := strings.Split(strings.TrimSpace(output), "\n")
-	
+
 	// Check start position (top-left path cell) has filled circle ●
 	if !strings.Contains(lines[1], "●") {
 		t.Error("Expected start marker (●) in maze output")
 	}
-	
+
 	// Check goal position (bottom-right path cell) has empty circle ○
 	if !strings.Contains(lines[len(lines)-2], "○") {
 		t.Error("Expected goal marker (○) in maze output")

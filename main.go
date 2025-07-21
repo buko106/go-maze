@@ -30,7 +30,7 @@ func main() {
 	} else {
 		generator = maze.NewGenerator()
 	}
-	
+
 	m := generator.Generate(*size, *size)
 	fmt.Print(m.String())
 }

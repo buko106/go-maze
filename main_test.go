@@ -8,10 +8,10 @@ import (
 
 func TestSizeValidation(t *testing.T) {
 	tests := []struct {
-		name     string
-		args     []string
-		wantErr  bool
-		errMsg   string
+		name    string
+		args    []string
+		wantErr bool
+		errMsg  string
 	}{
 		{
 			name:    "default size works",
@@ -52,7 +52,7 @@ func TestSizeValidation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := exec.Command("go", append([]string{"run", "main.go"}, tt.args...)...)
 			output, err := cmd.CombinedOutput()
-			
+
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("Expected error but got none")
@@ -86,7 +86,7 @@ func TestSizeValidation(t *testing.T) {
 
 func TestMazeDimensions(t *testing.T) {
 	sizes := []string{"5", "7", "9", "11", "15", "21"}
-	
+
 	for _, size := range sizes {
 		t.Run("size_"+size, func(t *testing.T) {
 			cmd := exec.Command("go", "run", "main.go", "-s", size)
@@ -94,20 +94,21 @@ func TestMazeDimensions(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to run command: %v", err)
 			}
-			
+
 			lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 			expectedSize := len(size) // This is wrong, need to convert string to int
-			
+
 			// Convert string to expected size
 			expectedSize = map[string]int{"5": 5, "7": 7, "9": 9, "11": 11, "15": 15, "21": 21}[size]
-			
+
 			if len(lines) != expectedSize {
 				t.Errorf("Expected %d lines but got %d", expectedSize, len(lines))
 			}
-			
+
 			for i, line := range lines {
-				if len(line) != expectedSize {
-					t.Errorf("Line %d should have %d characters but has %d", i, expectedSize, len(line))
+				runeCount := len([]rune(line))
+				if runeCount != expectedSize {
+					t.Errorf("Line %d should have %d characters but has %d", i, expectedSize, runeCount)
 				}
 			}
 		})
@@ -117,20 +118,20 @@ func TestMazeDimensions(t *testing.T) {
 // Test seed functionality - should produce same maze for same seed
 func TestSeedReproducibility(t *testing.T) {
 	seedValue := "12345"
-	
+
 	// Generate maze twice with same seed
 	cmd1 := exec.Command("go", "run", "main.go", "--seed", seedValue, "-s", "9")
 	output1, err1 := cmd1.Output()
 	if err1 != nil {
 		t.Fatalf("First run failed: %v", err1)
 	}
-	
+
 	cmd2 := exec.Command("go", "run", "main.go", "--seed", seedValue, "-s", "9")
 	output2, err2 := cmd2.Output()
 	if err2 != nil {
 		t.Fatalf("Second run failed: %v", err2)
 	}
-	
+
 	if string(output1) != string(output2) {
 		t.Error("Same seed should produce identical mazes")
 		t.Logf("Output1:\n%s", string(output1))
@@ -145,13 +146,13 @@ func TestDifferentSeedsDifferentMazes(t *testing.T) {
 	if err1 != nil {
 		t.Fatalf("First run failed: %v", err1)
 	}
-	
+
 	cmd2 := exec.Command("go", "run", "main.go", "--seed", "222", "-s", "9")
 	output2, err2 := cmd2.Output()
 	if err2 != nil {
 		t.Fatalf("Second run failed: %v", err2)
 	}
-	
+
 	if string(output1) == string(output2) {
 		t.Error("Different seeds should produce different mazes")
 	}

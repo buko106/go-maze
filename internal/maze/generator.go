@@ -8,9 +8,9 @@ import (
 )
 
 type Maze struct {
-	Width  int
-	Height int
-	Grid   [][]bool // true = wall, false = path
+	Width    int
+	Height   int
+	Grid     [][]bool // true = wall, false = path
 	StartRow int
 	StartCol int
 	GoalRow  int
@@ -35,7 +35,7 @@ func NewGeneratorWithSeed(seedStr string) *Generator {
 		// If parsing fails, use string hash as fallback
 		seed = hashString(seedStr)
 	}
-	
+
 	return &Generator{
 		rand: rand.New(rand.NewSource(seed)),
 	}
@@ -59,7 +59,7 @@ func (g *Generator) Generate(width, height int) *Maze {
 			grid[i][j] = true // Start with all walls
 		}
 	}
-	
+
 	maze := &Maze{
 		Width:    width,
 		Height:   height,
@@ -69,14 +69,14 @@ func (g *Generator) Generate(width, height int) *Maze {
 		GoalRow:  height - 2,
 		GoalCol:  width - 2,
 	}
-	
+
 	// Use DFS algorithm to generate maze
 	g.generateDFS(maze, 1, 1)
-	
+
 	// Ensure start and goal positions are paths
 	maze.Grid[maze.StartRow][maze.StartCol] = false
 	maze.Grid[maze.GoalRow][maze.GoalCol] = false
-	
+
 	return maze
 }
 
@@ -84,25 +84,25 @@ func (g *Generator) Generate(width, height int) *Maze {
 func (g *Generator) generateDFS(maze *Maze, startRow, startCol int) {
 	// Mark starting cell as path
 	maze.Grid[startRow][startCol] = false
-	
+
 	// Define directions: up, right, down, left
 	directions := [][2]int{{-2, 0}, {0, 2}, {2, 0}, {0, -2}}
-	
+
 	// Shuffle directions for randomness
 	g.shuffleDirections(directions)
-	
+
 	// Try each direction
 	for _, dir := range directions {
 		newRow := startRow + dir[0]
 		newCol := startCol + dir[1]
-		
+
 		// Check if new position is valid and unvisited
 		if g.isValidCell(maze, newRow, newCol) && maze.Grid[newRow][newCol] {
 			// Remove wall between current and new cell
 			wallRow := startRow + dir[0]/2
 			wallCol := startCol + dir[1]/2
 			maze.Grid[wallRow][wallCol] = false
-			
+
 			// Recursively generate from new cell
 			g.generateDFS(maze, newRow, newCol)
 		}
