@@ -55,6 +55,23 @@ golangci-lint linters            # List available linters
 golangci-lint formatters         # List available formatters
 ```
 
+### Pre-commit Hooks
+```bash
+pre-commit install               # Install pre-commit hooks to git
+pre-commit run --all-files       # Run all hooks on all files
+pre-commit run <hook-id>         # Run specific hook
+pre-commit autoupdate            # Update hook versions
+pre-commit clean                 # Clean hook environments
+```
+
+**Enabled hooks:**
+- **golangci-lint**: Lint changed files only (fast)
+- **golangci-lint-fmt**: Format all Go files
+- **go-mod-tidy**: Keep go.mod dependencies tidy
+- **go-unit-tests**: Run tests for changed packages
+- **go-build**: Verify project builds successfully
+- **File checks**: YAML/JSON validation, whitespace fixes, merge conflict detection
+
 ## Architecture
 
 The codebase follows a clean package structure with clear separation of concerns:
@@ -176,6 +193,8 @@ This project maintains zero runtime dependencies:
 
 ### Development Dependencies
 - **golangci-lint v2.3.0+**: Comprehensive linting and formatting toolchain
-- Configuration file: `.golangci.yml` (version 2 format)
+- **pre-commit v4.2.0+**: Automated code quality checks before commits
+- Configuration files: `.golangci.yml` (version 2 format), `.pre-commit-config.yaml`
 - Includes 12+ linters: errcheck, govet, staticcheck, gosec, revive, etc.
 - Auto-formatting with gofmt and goimports
+- Pre-commit hooks for continuous quality assurance
