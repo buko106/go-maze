@@ -45,14 +45,24 @@ coverage:
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
 
-# Format code
+# Format code using golangci-lint
 .PHONY: fmt
 fmt:
+	golangci-lint fmt
+
+# Legacy format with go fmt (kept for compatibility)
+.PHONY: fmt-go
+fmt-go:
 	go fmt ./...
 
-# Lint code
+# Lint code using golangci-lint
 .PHONY: lint
 lint:
+	golangci-lint run
+
+# Legacy lint with go vet (kept for compatibility)
+.PHONY: lint-go
+lint-go:
 	go vet ./...
 
 # Clean build artifacts
@@ -99,8 +109,10 @@ help:
 	@echo "  test-verbose  - Run tests with verbose output"
 	@echo "  test-coverage - Run tests with coverage"
 	@echo "  coverage      - Generate HTML coverage report"
-	@echo "  fmt           - Format Go source code"
-	@echo "  lint          - Run go vet"
+	@echo "  fmt           - Format code using golangci-lint"
+	@echo "  fmt-go        - Format using go fmt (legacy)"
+	@echo "  lint          - Run golangci-lint"
+	@echo "  lint-go       - Run go vet (legacy)"
 	@echo "  clean         - Remove build artifacts"
 	@echo "  run           - Build and run with default settings"
 	@echo "  examples      - Show example maze outputs"

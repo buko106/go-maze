@@ -41,8 +41,18 @@ go test -cover ./...             # Run tests with coverage report
 ### Development Tools
 ```bash
 go mod tidy                      # Clean up dependencies
-go fmt ./...                     # Format code
-go vet ./...                     # Lint code
+make fmt                         # Format code using golangci-lint
+make lint                        # Lint code using golangci-lint
+make fmt-go                      # Format code using go fmt (legacy)
+make lint-go                     # Lint code using go vet (legacy)
+```
+
+### Code Quality Tools
+```bash
+golangci-lint run                # Run comprehensive linting
+golangci-lint fmt                # Apply formatters and fix issues
+golangci-lint linters            # List available linters
+golangci-lint formatters         # List available formatters
 ```
 
 ## Architecture
@@ -135,8 +145,11 @@ The project maintains exceptional testing standards:
 - Go standard library only (no external dependencies)
 - Comprehensive error handling with user-friendly messages
 - Clean separation between CLI, algorithm, and testing concerns
-- Consistent code formatting with `go fmt`
-- Static analysis compliance with `go vet`
+- **Modern linting**: Comprehensive code analysis with `golangci-lint`
+- **Multi-formatter support**: Formatting with `gofmt` and `goimports`
+- **Security analysis**: Security checks with `gosec`
+- **Code complexity**: Cyclomatic complexity monitoring with `gocyclo`
+- **Export documentation**: Proper comments for all exported functions and types
 
 ## Algorithm Details
 
@@ -156,7 +169,13 @@ The project maintains exceptional testing standards:
 
 ## Dependencies
 
-This project maintains zero external dependencies:
+This project maintains zero runtime dependencies:
 - Uses only Go standard library (`math/rand`, `strings`, `flag`, `fmt`, `os`, `strconv`)
 - Testing uses standard `testing` package with `os/exec` for CLI testing
 - No external frameworks or libraries required
+
+### Development Dependencies
+- **golangci-lint v2.3.0+**: Comprehensive linting and formatting toolchain
+- Configuration file: `.golangci.yml` (version 2 format)
+- Includes 12+ linters: errcheck, govet, staticcheck, gosec, revive, etc.
+- Auto-formatting with gofmt and goimports
