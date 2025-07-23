@@ -12,6 +12,8 @@ func main() {
 	size := flag.Int("s", 21, "Size of the square maze (must be odd, minimum 5)")
 	flag.IntVar(size, "size", 21, "Size of the square maze (must be odd, minimum 5)")
 	seed := flag.String("seed", "", "Seed for reproducible maze generation (integer)")
+	algorithm := flag.String("a", "dfs", "Algorithm for maze generation (dfs)")
+	flag.StringVar(algorithm, "algorithm", "dfs", "Algorithm for maze generation (dfs)")
 	flag.Parse()
 
 	// Validate size
@@ -24,11 +26,32 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Validate algorithm
+	supportedAlgorithms := maze.GetSupportedAlgorithms()
+	algorithmValid := false
+	for _, alg := range supportedAlgorithms {
+		if *algorithm == alg {
+			algorithmValid = true
+			break
+		}
+	}
+	if !algorithmValid {
+		fmt.Fprintf(os.Stderr, "Error: Unsupported algorithm '%s', supported algorithms: %v\n", *algorithm, supportedAlgorithms)
+		os.Exit(1)
+	}
+
 	var generator *maze.Generator
+	var err error
+
 	if *seed != "" {
-		generator = maze.NewGeneratorWithSeed(*seed)
+		generator, err = maze.NewGeneratorWithSeedAndAlgorithm(*seed, *algorithm)
 	} else {
-		generator = maze.NewGenerator()
+		generator, err = maze.NewGeneratorWithAlgorithm(*algorithm)
+	}
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating generator: %v\n", err)
+		os.Exit(1)
 	}
 
 	m := generator.Generate(*size, *size)

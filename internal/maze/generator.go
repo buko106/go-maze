@@ -18,13 +18,28 @@ type Maze struct {
 }
 
 type Generator struct {
-	rand *rand.Rand
+	rand      *rand.Rand
+	algorithm Algorithm
 }
 
 func NewGenerator() *Generator {
+	algorithm, _ := NewAlgorithm("dfs") // Default to DFS algorithm
 	return &Generator{
-		rand: rand.New(rand.NewSource(time.Now().UnixNano())),
+		rand:      rand.New(rand.NewSource(time.Now().UnixNano())), // #nosec G404 - not for cryptographic use
+		algorithm: algorithm,
 	}
+}
+
+// NewGeneratorWithAlgorithm creates a Generator with a specific algorithm
+func NewGeneratorWithAlgorithm(algorithmName string) (*Generator, error) {
+	algorithm, err := NewAlgorithm(algorithmName)
+	if err != nil {
+		return nil, err
+	}
+	return &Generator{
+		rand:      rand.New(rand.NewSource(time.Now().UnixNano())), // #nosec G404 - not for cryptographic use
+		algorithm: algorithm,
+	}, nil
 }
 
 // NewGeneratorWithSeed creates a Generator with a specific seed for reproducible generation
@@ -36,9 +51,31 @@ func NewGeneratorWithSeed(seedStr string) *Generator {
 		seed = hashString(seedStr)
 	}
 
+	algorithm, _ := NewAlgorithm("dfs") // Default to DFS algorithm
 	return &Generator{
-		rand: rand.New(rand.NewSource(seed)),
+		rand:      rand.New(rand.NewSource(seed)), // #nosec G404 - not for cryptographic use
+		algorithm: algorithm,
 	}
+}
+
+// NewGeneratorWithSeedAndAlgorithm creates a Generator with specific seed and algorithm
+func NewGeneratorWithSeedAndAlgorithm(seedStr, algorithmName string) (*Generator, error) {
+	// Convert string seed to int64
+	seed, err := strconv.ParseInt(seedStr, 10, 64)
+	if err != nil {
+		// If parsing fails, use string hash as fallback
+		seed = hashString(seedStr)
+	}
+
+	algorithm, err := NewAlgorithm(algorithmName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Generator{
+		rand:      rand.New(rand.NewSource(seed)), // #nosec G404 - not for cryptographic use
+		algorithm: algorithm,
+	}, nil
 }
 
 // hashString converts string to int64 for seed
@@ -70,56 +107,14 @@ func (g *Generator) Generate(width, height int) *Maze {
 		GoalCol:  width - 2,
 	}
 
-	// Use DFS algorithm to generate maze
-	g.generateDFS(maze, 1, 1)
+	// Use selected algorithm to generate maze
+	g.algorithm.Generate(maze, 1, 1, g.rand)
 
 	// Ensure start and goal positions are paths
 	maze.Grid[maze.StartRow][maze.StartCol] = false
 	maze.Grid[maze.GoalRow][maze.GoalCol] = false
 
 	return maze
-}
-
-// generateDFS implements Depth-First Search maze generation algorithm
-func (g *Generator) generateDFS(maze *Maze, startRow, startCol int) {
-	// Mark starting cell as path
-	maze.Grid[startRow][startCol] = false
-
-	// Define directions: up, right, down, left
-	directions := [][2]int{{-2, 0}, {0, 2}, {2, 0}, {0, -2}}
-
-	// Shuffle directions for randomness
-	g.shuffleDirections(directions)
-
-	// Try each direction
-	for _, dir := range directions {
-		newRow := startRow + dir[0]
-		newCol := startCol + dir[1]
-
-		// Check if new position is valid and unvisited
-		if g.isValidCell(maze, newRow, newCol) && maze.Grid[newRow][newCol] {
-			// Remove wall between current and new cell
-			wallRow := startRow + dir[0]/2
-			wallCol := startCol + dir[1]/2
-			maze.Grid[wallRow][wallCol] = false
-
-			// Recursively generate from new cell
-			g.generateDFS(maze, newRow, newCol)
-		}
-	}
-}
-
-// shuffleDirections randomizes the order of directions
-func (g *Generator) shuffleDirections(directions [][2]int) {
-	for i := len(directions) - 1; i > 0; i-- {
-		j := g.rand.Intn(i + 1)
-		directions[i], directions[j] = directions[j], directions[i]
-	}
-}
-
-// isValidCell checks if a cell position is within bounds
-func (g *Generator) isValidCell(maze *Maze, row, col int) bool {
-	return row > 0 && row < maze.Height-1 && col > 0 && col < maze.Width-1
 }
 
 func (m *Maze) String() string {

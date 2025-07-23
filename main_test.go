@@ -157,3 +157,114 @@ func TestDifferentSeedsDifferentMazes(t *testing.T) {
 		t.Error("Different seeds should produce different mazes")
 	}
 }
+
+// Test algorithm flag functionality
+func TestAlgorithmFlag(t *testing.T) {
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr bool
+		errMsg  string
+	}{
+		{
+			name:    "default algorithm works",
+			args:    []string{"-s", "9"},
+			wantErr: false,
+		},
+		{
+			name:    "explicit dfs algorithm short flag",
+			args:    []string{"-s", "9", "-a", "dfs"},
+			wantErr: false,
+		},
+		{
+			name:    "explicit dfs algorithm long flag",
+			args:    []string{"-s", "9", "--algorithm", "dfs"},
+			wantErr: false,
+		},
+		{
+			name:    "invalid algorithm",
+			args:    []string{"-s", "9", "-a", "kruskal"},
+			wantErr: true,
+			errMsg:  "Unsupported algorithm 'kruskal'",
+		},
+		{
+			name:    "invalid algorithm long flag",
+			args:    []string{"-s", "9", "--algorithm", "prim"},
+			wantErr: true,
+			errMsg:  "Unsupported algorithm 'prim'",
+		},
+		{
+			name:    "algorithm with seed",
+			args:    []string{"-s", "9", "--seed", "42", "--algorithm", "dfs"},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := exec.Command("go", append([]string{"run", "main.go"}, tt.args...)...)
+			output, err := cmd.CombinedOutput()
+
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("Expected error but got none")
+				}
+				if !strings.Contains(string(output), tt.errMsg) {
+					t.Errorf("Expected error message '%s' but got '%s'", tt.errMsg, string(output))
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Unexpected error: %v, output: %s", err, string(output))
+				}
+				// Verify output looks like a maze
+				lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+				if len(lines) == 0 {
+					t.Error("No output generated")
+				}
+				// Check for start and goal markers
+				outputStr := string(output)
+				if !strings.Contains(outputStr, "●") {
+					t.Error("Expected maze to contain start marker (●)")
+				}
+				if !strings.Contains(outputStr, "○") {
+					t.Error("Expected maze to contain goal marker (○)")
+				}
+			}
+		})
+	}
+}
+
+// Test algorithm with seed reproducibility
+func TestAlgorithmSeedReproducibility(t *testing.T) {
+	seedValue := "98765"
+	algorithm := "dfs"
+
+	// Use binary instead of go run for faster execution
+	cmd1 := exec.Command("./maze", "--seed", seedValue, "--algorithm", algorithm, "-s", "9")
+	output1, err1 := cmd1.Output()
+	if err1 != nil {
+		// Fall back to go run if binary doesn't exist
+		cmd1 = exec.Command("go", "run", "main.go", "--seed", seedValue, "--algorithm", algorithm, "-s", "9")
+		output1, err1 = cmd1.Output()
+		if err1 != nil {
+			t.Fatalf("First run failed: %v", err1)
+		}
+	}
+
+	cmd2 := exec.Command("./maze", "--seed", seedValue, "--algorithm", algorithm, "-s", "9")
+	output2, err2 := cmd2.Output()
+	if err2 != nil {
+		// Fall back to go run if binary doesn't exist
+		cmd2 = exec.Command("go", "run", "main.go", "--seed", seedValue, "--algorithm", algorithm, "-s", "9")
+		output2, err2 = cmd2.Output()
+		if err2 != nil {
+			t.Fatalf("Second run failed: %v", err2)
+		}
+	}
+
+	if string(output1) != string(output2) {
+		t.Error("Same seed and algorithm should produce identical mazes")
+		t.Logf("Output1:\n%s", string(output1))
+		t.Logf("Output2:\n%s", string(output2))
+	}
+}
