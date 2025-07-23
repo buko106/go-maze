@@ -18,12 +18,14 @@ func NewAlgorithm(algorithmName string) (Algorithm, error) {
 		return &DFSAlgorithm{}, nil
 	case "kruskal":
 		return &KruskalAlgorithm{}, nil
+	case "wilson":
+		return &WilsonAlgorithm{}, nil
 	default:
-		return nil, fmt.Errorf("unknown algorithm: %s (supported: dfs, kruskal)", algorithmName)
+		return nil, fmt.Errorf("unknown algorithm: %s (supported: dfs, kruskal, wilson)", algorithmName)
 	}
 }
 
 // GetSupportedAlgorithms returns a list of supported algorithm names
 func GetSupportedAlgorithms() []string {
-	return []string{"dfs", "kruskal"}
+	return []string{"dfs", "kruskal", "wilson"}
 }

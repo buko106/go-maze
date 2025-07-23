@@ -2,14 +2,14 @@
 
 A feature-rich command-line maze generator written in Go with multiple generation algorithms.
 
-## Version 0.4.0
+## Version 0.5.0
 
-Complete maze generation with multiple algorithms, customizable size, reproducible seeds, visual start/goal markers, and solution path display.
+Complete maze generation with multiple algorithms (DFS, Kruskal's, Wilson's), customizable size, reproducible seeds, visual start/goal markers, and solution path display.
 
 ### Features
 
-- **Multiple algorithms**: Depth-First Search (DFS) and Kruskal's algorithm support
-- **Algorithm selection** with `-a, --algorithm` flag (dfs, kruskal)
+- **Multiple algorithms**: Depth-First Search (DFS), Kruskal's, and Wilson's algorithm support
+- **Algorithm selection** with `-a, --algorithm` flag (dfs, kruskal, wilson)
 - **Solution path display** with `--solution` flag using BFS pathfinding
 - **Customizable size** with `-s, --size` flag (odd numbers, minimum 5)
 - **Reproducible mazes** with `--seed` flag for consistent output
@@ -48,6 +48,7 @@ go build -o maze .
 # Use different algorithms
 ./maze -a dfs --size 15        # Depth-First Search (default)
 ./maze -a kruskal --size 15    # Kruskal's algorithm
+./maze -a wilson --size 15     # Wilson's algorithm
 
 # Display solution path
 ./maze --solution --size 11 --seed 123
@@ -55,6 +56,7 @@ go build -o maze .
 
 # Algorithm with seed for reproducibility
 ./maze -a kruskal --seed 42 --size 9
+./maze -a wilson --seed 42 --size 9
 
 # Show help
 ./maze --help
@@ -170,6 +172,50 @@ go build -o maze .
 ###############
 ```
 
+**Wilson Algorithm with same seed:**
+```bash
+./maze -a wilson --seed 456 -s 15
+```
+```
+###############
+#●      #     #
+# ##### # ### #
+#   #   #   # #
+### # ##### # #
+#   #   #     #
+# ##### ##### #
+#       #   # #
+####### ### # #
+#   #         #
+# # # #########
+# # # #   #   #
+# ### # # # # #
+#     # #    ○#
+###############
+```
+
+**Wilson Algorithm with solution path:**
+```bash
+./maze -a wilson --seed 456 -s 15 --solution
+```
+```
+###############
+#●······#     #
+#·#####·# ### #
+#···#  ·#   # #
+###·# ##·## # #
+#  ·#   #·····#
+# ##·## ####·#
+#    ···#   #·#
+#######·### #·#
+#   #  ·······#
+# # # #########
+# # # #   #   #
+# ### # # # # #
+#     # #    ○#
+###############
+```
+
 ### Development
 
 This project uses **Makefile** for common development tasks and follows **Test-Driven Development (TDD)** principles.
@@ -224,6 +270,7 @@ go fmt ./...
   - `algorithm.go`: Algorithm interface and factory pattern
   - `dfs.go`: Depth-First Search algorithm implementation
   - `kruskal.go`: Kruskal's algorithm with Union-Find data structure
+  - `wilson.go`: Wilson's algorithm with loop-erased random walks
   - `pathfinder.go`: BFS pathfinding for solution display
   - `*_test.go`: Comprehensive test suites with connectivity and reproducibility testing
 - **`Makefile`**: Development workflow automation
@@ -247,7 +294,16 @@ go fmt ./...
 5. For each edge, if cells are in different components, connect them
 6. Continue until all cells are connected in a single component
 
-**Both algorithms ensure:**
+**Wilson's Algorithm Maze Generation:**
+1. Start with grid of all walls and add starting cell to maze
+2. Create list of all potential path cells (odd coordinates)
+3. For each remaining cell not in maze:
+   - Perform loop-erased random walk from current cell
+   - When walk reaches a cell already in maze, add entire path
+   - Connect path cells by removing walls between adjacent positions
+4. Continue until all cells are connected in uniform spanning tree
+
+**All algorithms ensure:**
 - **Perfect maze**: Exactly one path between any two points
 - **No isolated areas**: All path cells are connected
 - **Randomness**: Different seed values produce different mazes
@@ -258,7 +314,7 @@ go fmt ./...
 
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
-| `--algorithm` | `-a` | dfs | Algorithm for maze generation (dfs, kruskal) |
+| `--algorithm` | `-a` | dfs | Algorithm for maze generation (dfs, kruskal, wilson) |
 | `--size` | `-s` | 21 | Size of square maze (must be odd, minimum 5) |
 | `--seed` | - | random | Seed for reproducible generation (string/integer) |
 | `--solution` | - | false | Display the solution path from start to goal |
@@ -266,11 +322,11 @@ go fmt ./...
 
 ### Completed Features
 
-- [x] **Multiple algorithms**: DFS and Kruskal's algorithm implementations
+- [x] **Multiple algorithms**: DFS, Kruskal's, and Wilson's algorithm implementations
 - [x] **Algorithm selection**: CLI flag support for algorithm choice
 - [x] **Solution path display**: BFS pathfinding with `--solution` flag
 - [x] **Size specification**: Custom maze dimensions
-- [x] **Seed support**: Reproducible maze generation for both algorithms
+- [x] **Seed support**: Reproducible maze generation for all algorithms
 - [x] **Visual markers**: Start (●), goal (○), and solution path (·) positions
 - [x] **Path connectivity**: Guaranteed single path with comprehensive validation
 - [x] **Performance optimization**: Fast generation for large mazes

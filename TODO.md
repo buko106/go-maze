@@ -66,9 +66,10 @@
 - [x] **Algorithm selection** ✅ COMPLETED
   - [x] Create `Algorithm` interface
   - [x] Implement Kruskal's algorithm with Union-Find data structure
-  - [x] Add `-a, --algorithm` flag for selection (supports: dfs, kruskal)
-  - [x] Comprehensive test suite for both algorithms
-  - [x] Seed reproducibility for both algorithms
+  - [x] Implement Wilson's algorithm with loop-erased random walks
+  - [x] Add `-a, --algorithm` flag for selection (supports: dfs, kruskal, wilson)
+  - [x] Comprehensive test suite for all three algorithms
+  - [x] Seed reproducibility for all algorithms
   - [x] CLI integration and validation
   - [ ] Implement Prim's algorithm (future enhancement)
   - [ ] Performance comparison tests (future enhancement)

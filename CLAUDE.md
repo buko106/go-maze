@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a feature-complete CLI application for generating ASCII mazes written in Go. The project follows Test-Driven Development (TDD) principles and implements multiple maze generation algorithms (DFS, Kruskal's) with advanced CLI features including solution path display.
+This is a feature-complete CLI application for generating ASCII mazes written in Go. The project follows Test-Driven Development (TDD) principles and implements multiple maze generation algorithms (DFS, Kruskal's, Wilson's) with advanced CLI features including solution path display.
 
 ## Commands
 
@@ -28,6 +28,7 @@ go build -o maze .
 ./maze --size 15                 # Custom size maze
 ./maze --seed 123 --size 9       # Reproducible maze with seed
 ./maze --algorithm kruskal --size 11  # Use Kruskal's algorithm
+./maze --algorithm wilson --size 11   # Use Wilson's algorithm
 ./maze --solution --seed 42 --size 9  # Display solution path
 ./maze --help                    # Show usage information
 ```
@@ -82,7 +83,7 @@ The codebase follows a clean package structure with clear separation of concerns
 - **`main.go`**: Entry point with CLI argument parsing using Go's `flag` package
   - Handles `--size/-s` flag for maze dimensions (odd numbers, minimum 5)
   - Handles `--seed` flag for reproducible generation (string/integer)
-  - Handles `--algorithm/-a` flag for algorithm selection (dfs, kruskal)
+  - Handles `--algorithm/-a` flag for algorithm selection (dfs, kruskal, wilson)
   - Handles `--solution` flag for solution path display
   - Input validation and error handling with user-friendly messages
 
@@ -98,7 +99,7 @@ The codebase follows a clean package structure with clear separation of concerns
 - **`internal/maze/algorithm.go`**: Algorithm interface and factory pattern
   - `Algorithm` interface: Common interface for all generation algorithms
   - `NewAlgorithm(string)`: Factory function for algorithm creation
-  - `GetSupportedAlgorithms()`: Lists available algorithms (dfs, kruskal)
+  - `GetSupportedAlgorithms()`: Lists available algorithms (dfs, kruskal, wilson)
 
 - **`internal/maze/dfs.go`**: Depth-First Search algorithm implementation
   - `DFSAlgorithm` struct: Implements recursive DFS with random direction selection
@@ -108,6 +109,11 @@ The codebase follows a clean package structure with clear separation of concerns
   - `KruskalAlgorithm` struct: Implements minimum spanning tree approach
   - `UnionFind` data structure: Efficient cycle detection and path compression
   - Creates mazes with different structural characteristics than DFS
+
+- **`internal/maze/wilson.go`**: Wilson's algorithm with loop-erased random walks
+  - `WilsonAlgorithm` struct: Implements uniform spanning tree generation
+  - Loop-erased random walk: Performs random walks with cycle detection and erasure
+  - Generates unbiased mazes with uniform distribution over all possible spanning trees
 
 - **`internal/maze/pathfinder.go`**: BFS pathfinding for solution display
   - `Position` struct: Represents coordinates in the maze
@@ -128,6 +134,7 @@ The codebase follows a clean package structure with clear separation of concerns
   - `TestGetSupportedAlgorithms`: Algorithm enumeration testing
   - `TestDFSAlgorithmGenerate`: DFS-specific functionality
   - `TestKruskalAlgorithmGenerate`: Kruskal-specific functionality
+  - `TestWilsonAlgorithmGenerate`: Wilson's algorithm functionality
   - Cross-algorithm reproducibility and connectivity testing
 
 - **`internal/maze/pathfinder_test.go`**: Pathfinding algorithm testing
@@ -177,18 +184,18 @@ type Position struct {
 ### Completed Phases
 - **Phase 1 (MVP)**: Basic maze generation ✅
 - **Phase 2**: CLI features (size, seed) ✅
-- **Phase 3**: Algorithm implementation (DFS, Kruskal's) ✅
+- **Phase 3**: Algorithm implementation (DFS, Kruskal's, Wilson's) ✅
 - **Phase 4**: Solution display feature ✅
 
 ### Key Features Implemented
-- **Multiple Algorithms**: DFS and Kruskal's algorithm implementations with distinct characteristics
+- **Multiple Algorithms**: DFS, Kruskal's, and Wilson's algorithm implementations with distinct characteristics
 - **Algorithm Selection**: CLI flag support for choosing generation algorithm
 - **Solution Path Display**: BFS pathfinding with visual solution markers
 - **Seed Support**: Reproducible mazes with string/integer seed conversion for all algorithms
 - **Size Customization**: Configurable dimensions with validation (odd numbers, minimum 5)
 - **Visual Markers**: Start (●), goal (○), and solution path (·) positions
 - **Path Connectivity**: Guaranteed connectivity validation with algorithm-specific testing
-- **Performance**: Optimized for large mazes (51x51 in ~0.01s for both algorithms)
+- **Performance**: Optimized for large mazes (51x51 in ~0.01s for all algorithms)
 - **Union-Find Structure**: Efficient cycle detection for Kruskal's algorithm
 
 ## Testing Standards
@@ -202,7 +209,7 @@ The project maintains exceptional testing standards:
 - **Reproducibility testing**: Seed consistency validation
 
 ### Test Categories
-1. **Unit Tests**: Core algorithm functionality (DFS, Kruskal's, BFS pathfinding)
+1. **Unit Tests**: Core algorithm functionality (DFS, Kruskal's, Wilson's, BFS pathfinding)
 2. **Integration Tests**: CLI interface and flag parsing (all algorithms and solution display)
 3. **Property Tests**: Maze connectivity and validation for all generation algorithms
 4. **Performance Tests**: Generation speed and memory usage across algorithms
@@ -245,6 +252,15 @@ The project maintains exceptional testing standards:
 5. For each edge, check if connecting cells would create a cycle
 6. If no cycle, connect the cells by removing the wall
 7. Continue until all cells are connected in a spanning tree
+
+### Wilson's Algorithm Implementation
+1. Initialize grid with all walls and mark start cell as part of maze
+2. Create list of all potential path cells (odd coordinates)
+3. For each remaining cell not in maze:
+   a. Perform loop-erased random walk from current cell
+   b. When walk reaches a cell already in maze, add entire path
+   c. Connect path cells by removing walls between adjacent positions
+4. Continue until all cells are connected in uniform spanning tree
 
 ### BFS Pathfinding Implementation
 1. Initialize BFS queue with start position
