@@ -207,3 +207,79 @@ func TestHashStringFunctionality(t *testing.T) {
 		t.Error("Different string seeds should produce different mazes")
 	}
 }
+
+// Test maze string output with solution path
+func TestMazeStringWithSolutionPath(t *testing.T) {
+	generator := NewGeneratorWithSeed("123")
+	maze := generator.Generate(7, 7)
+
+	// Find an actual path using the pathfinder to ensure valid solution path
+	solutionPath := FindPath(maze)
+	if solutionPath == nil {
+		t.Fatal("Could not find path in generated maze")
+	}
+
+	maze.SolutionPath = solutionPath
+
+	output := maze.String()
+
+	// Check that solution path markers are displayed
+	if !strings.Contains(output, "·") {
+		t.Error("Expected maze with solution path to contain solution markers (·)")
+	}
+
+	// Check that start and goal markers are still present
+	if !strings.Contains(output, "●") {
+		t.Error("Expected maze to contain start marker (●)")
+	}
+	if !strings.Contains(output, "○") {
+		t.Error("Expected maze to contain goal marker (○)")
+	}
+
+	// Verify that the solution path has the expected number of positions
+	if len(maze.SolutionPath) < 2 {
+		t.Error("Solution path should have at least start and goal positions")
+	}
+
+	// Verify that start and goal are in the solution path
+	foundStart := false
+	foundGoal := false
+	for _, pos := range maze.SolutionPath {
+		if pos.Row == maze.StartRow && pos.Col == maze.StartCol {
+			foundStart = true
+		}
+		if pos.Row == maze.GoalRow && pos.Col == maze.GoalCol {
+			foundGoal = true
+		}
+	}
+	if !foundStart {
+		t.Error("Solution path should include start position")
+	}
+	if !foundGoal {
+		t.Error("Solution path should include goal position")
+	}
+}
+
+// Test maze string output with empty solution path
+func TestMazeStringWithEmptySolutionPath(t *testing.T) {
+	generator := NewGeneratorWithSeed("123")
+	maze := generator.Generate(7, 7)
+
+	// Explicitly set empty solution path
+	maze.SolutionPath = []Position{}
+
+	output := maze.String()
+
+	// Check that no solution path markers are displayed
+	if strings.Contains(output, "·") {
+		t.Error("Expected maze with empty solution path to not contain solution markers (·)")
+	}
+
+	// Check that start and goal markers are still present
+	if !strings.Contains(output, "●") {
+		t.Error("Expected maze to contain start marker (●)")
+	}
+	if !strings.Contains(output, "○") {
+		t.Error("Expected maze to contain goal marker (○)")
+	}
+}
