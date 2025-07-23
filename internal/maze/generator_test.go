@@ -134,3 +134,76 @@ func TestMazeStartGoalMarkers(t *testing.T) {
 		t.Error("Expected goal marker (○) in maze output")
 	}
 }
+
+// Test NewGeneratorWithAlgorithm function
+func TestNewGeneratorWithAlgorithm(t *testing.T) {
+	// Test valid algorithm
+	generator, err := NewGeneratorWithAlgorithm("dfs")
+	if err != nil {
+		t.Errorf("Expected no error for valid algorithm, got: %v", err)
+	}
+	if generator == nil {
+		t.Error("Expected generator to be created")
+	}
+
+	// Test invalid algorithm
+	generator, err = NewGeneratorWithAlgorithm("invalid")
+	if err == nil {
+		t.Error("Expected error for invalid algorithm")
+	}
+	if generator != nil {
+		t.Error("Expected nil generator for invalid algorithm")
+	}
+}
+
+// Test NewGeneratorWithSeedAndAlgorithm function
+func TestNewGeneratorWithSeedAndAlgorithm(t *testing.T) {
+	// Test valid algorithm with numeric seed
+	generator, err := NewGeneratorWithSeedAndAlgorithm("123", "dfs")
+	if err != nil {
+		t.Errorf("Expected no error for valid algorithm, got: %v", err)
+	}
+	if generator == nil {
+		t.Error("Expected generator to be created")
+	}
+
+	// Test valid algorithm with string seed
+	generator, err = NewGeneratorWithSeedAndAlgorithm("test-seed", "dfs")
+	if err != nil {
+		t.Errorf("Expected no error for string seed, got: %v", err)
+	}
+	if generator == nil {
+		t.Error("Expected generator to be created")
+	}
+
+	// Test invalid algorithm
+	generator, err = NewGeneratorWithSeedAndAlgorithm("123", "invalid")
+	if err == nil {
+		t.Error("Expected error for invalid algorithm")
+	}
+	if generator != nil {
+		t.Error("Expected nil generator for invalid algorithm")
+	}
+}
+
+// Test hashString function indirectly through string seed
+func TestHashStringFunctionality(t *testing.T) {
+	// Test that string seeds produce consistent results
+	generator1 := NewGeneratorWithSeed("test-string")
+	generator2 := NewGeneratorWithSeed("test-string")
+
+	maze1 := generator1.Generate(7, 7)
+	maze2 := generator2.Generate(7, 7)
+
+	if maze1.String() != maze2.String() {
+		t.Error("Same string seed should produce identical mazes")
+	}
+
+	// Test different string seeds produce different results
+	generator3 := NewGeneratorWithSeed("different-string")
+	maze3 := generator3.Generate(7, 7)
+
+	if maze1.String() == maze3.String() {
+		t.Error("Different string seeds should produce different mazes")
+	}
+}
