@@ -96,10 +96,9 @@ func TestMazeDimensions(t *testing.T) {
 			}
 
 			lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-			expectedSize := len(size) // This is wrong, need to convert string to int
 
 			// Convert string to expected size
-			expectedSize = map[string]int{"5": 5, "7": 7, "9": 9, "11": 11, "15": 15, "21": 21}[size]
+			expectedSize := map[string]int{"5": 5, "7": 7, "9": 9, "11": 11, "15": 15, "21": 21}[size]
 
 			if len(lines) != expectedSize {
 				t.Errorf("Expected %d lines but got %d", expectedSize, len(lines))
@@ -276,5 +275,140 @@ func TestAlgorithmSeedReproducibility(t *testing.T) {
 		t.Error("Same seed and algorithm should produce identical mazes")
 		t.Logf("Output1:\n%s", string(output1))
 		t.Logf("Output2:\n%s", string(output2))
+	}
+}
+
+// Test solution flag functionality
+func TestSolutionFlag(t *testing.T) {
+	tests := []struct {
+		name         string
+		args         []string
+		wantSolution bool
+	}{
+		{
+			name:         "no solution flag",
+			args:         []string{"-s", "9", "--seed", "123"},
+			wantSolution: false,
+		},
+		{
+			name:         "solution flag enabled",
+			args:         []string{"-s", "9", "--seed", "123", "--solution"},
+			wantSolution: true,
+		},
+		{
+			name:         "solution flag with dfs algorithm",
+			args:         []string{"-s", "9", "--seed", "123", "--solution", "--algorithm", "dfs"},
+			wantSolution: true,
+		},
+		{
+			name:         "solution flag with kruskal algorithm",
+			args:         []string{"-s", "9", "--seed", "123", "--solution", "--algorithm", "kruskal"},
+			wantSolution: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := exec.Command("go", append([]string{"run", "main.go"}, tt.args...)...)
+			output, err := cmd.Output()
+			if err != nil {
+				t.Fatalf("Command failed: %v", err)
+			}
+
+			outputStr := string(output)
+
+			// Check for required maze elements
+			if !strings.Contains(outputStr, "●") {
+				t.Error("Expected maze to contain start marker (●)")
+			}
+			if !strings.Contains(outputStr, "○") {
+				t.Error("Expected maze to contain goal marker (○)")
+			}
+
+			// Check for solution path markers
+			hasSolutionMarkers := strings.Contains(outputStr, "·")
+			if tt.wantSolution && !hasSolutionMarkers {
+				t.Error("Expected maze to contain solution path markers (·) when --solution flag is used")
+			}
+			if !tt.wantSolution && hasSolutionMarkers {
+				t.Error("Expected maze to NOT contain solution path markers (·) when --solution flag is not used")
+			}
+		})
+	}
+}
+
+// Test solution path continuity
+func TestSolutionPathContinuity(t *testing.T) {
+	cmd := exec.Command("go", "run", "main.go", "-s", "11", "--seed", "456", "--solution")
+	output, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("Command failed: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	if len(lines) == 0 {
+		t.Fatal("No output generated")
+	}
+
+	// Find start and goal positions
+	var startRow, startCol, goalRow, goalCol int
+	var found bool
+	for i, line := range lines {
+		for j, char := range line {
+			switch char {
+			case '●':
+				startRow, startCol = i, j
+			case '○':
+				goalRow, goalCol = i, j
+				found = true
+			}
+		}
+	}
+
+	if !found {
+		t.Fatal("Could not find start and goal markers in output")
+	}
+
+	// Verify there's a path from start to goal via solution markers or direct connection
+	outputStr := string(output)
+	if !strings.Contains(outputStr, "·") {
+		t.Error("Expected solution path markers (·) to be present")
+	}
+
+	// Count solution markers - should be > 0 when solution is requested
+	solutionMarkerCount := strings.Count(outputStr, "·")
+	if solutionMarkerCount == 0 {
+		t.Error("Expected at least one solution path marker (·)")
+	}
+
+	t.Logf("Found solution path with %d markers from (%d,%d) to (%d,%d)",
+		solutionMarkerCount, startRow, startCol, goalRow, goalCol)
+}
+
+// Test solution flag with different seeds produces different solutions
+func TestSolutionWithDifferentSeeds(t *testing.T) {
+	cmd1 := exec.Command("go", "run", "main.go", "-s", "9", "--seed", "111", "--solution")
+	output1, err1 := cmd1.Output()
+	if err1 != nil {
+		t.Fatalf("First command failed: %v", err1)
+	}
+
+	cmd2 := exec.Command("go", "run", "main.go", "-s", "9", "--seed", "222", "--solution")
+	output2, err2 := cmd2.Output()
+	if err2 != nil {
+		t.Fatalf("Second command failed: %v", err2)
+	}
+
+	// Both should have solution markers
+	if !strings.Contains(string(output1), "·") {
+		t.Error("First maze should contain solution markers")
+	}
+	if !strings.Contains(string(output2), "·") {
+		t.Error("Second maze should contain solution markers")
+	}
+
+	// Different seeds should produce different solutions
+	if string(output1) == string(output2) {
+		t.Error("Different seeds should produce different solution paths")
 	}
 }

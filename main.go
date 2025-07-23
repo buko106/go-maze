@@ -14,6 +14,7 @@ func main() {
 	seed := flag.String("seed", "", "Seed for reproducible maze generation (integer)")
 	algorithm := flag.String("a", "dfs", "Algorithm for maze generation (dfs, kruskal)")
 	flag.StringVar(algorithm, "algorithm", "dfs", "Algorithm for maze generation (dfs, kruskal)")
+	solution := flag.Bool("solution", false, "Display the solution path from start to goal")
 	flag.Parse()
 
 	// Validate size
@@ -55,5 +56,14 @@ func main() {
 	}
 
 	m := generator.Generate(*size, *size)
+
+	// If solution flag is set, compute and display the solution path
+	if *solution {
+		solutionPath := maze.FindPath(m)
+		if solutionPath != nil {
+			m.SolutionPath = solutionPath
+		}
+	}
+
 	fmt.Print(m.String())
 }

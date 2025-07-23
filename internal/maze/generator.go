@@ -1,3 +1,6 @@
+// Package maze provides maze generation and representation functionality.
+// It supports multiple generation algorithms (DFS, Kruskal's) with reproducible
+// seeds, pathfinding capabilities, and various output formats.
 package maze
 
 import (
@@ -7,21 +10,25 @@ import (
 	"time"
 )
 
+// Maze represents a generated maze with walls, paths, and optional solution.
 type Maze struct {
-	Width    int
-	Height   int
-	Grid     [][]bool // true = wall, false = path
-	StartRow int
-	StartCol int
-	GoalRow  int
-	GoalCol  int
+	Width        int
+	Height       int
+	Grid         [][]bool // true = wall, false = path
+	StartRow     int
+	StartCol     int
+	GoalRow      int
+	GoalCol      int
+	SolutionPath []Position // Optional solution path from start to goal
 }
 
+// Generator creates mazes using configurable algorithms and seeds.
 type Generator struct {
 	rand      *rand.Rand
 	algorithm Algorithm
 }
 
+// NewGenerator creates a new Generator with default DFS algorithm and random seed.
 func NewGenerator() *Generator {
 	algorithm, _ := NewAlgorithm("dfs") // Default to DFS algorithm
 	return &Generator{
@@ -87,6 +94,7 @@ func hashString(s string) int64 {
 	return hash
 }
 
+// Generate creates a new maze with the specified dimensions using the configured algorithm.
 func (g *Generator) Generate(width, height int) *Maze {
 	// Initialize grid with all walls
 	grid := make([][]bool, height)
@@ -119,12 +127,23 @@ func (g *Generator) Generate(width, height int) *Maze {
 
 func (m *Maze) String() string {
 	var sb strings.Builder
+
+	// Create a set of solution positions for quick lookup
+	solutionSet := make(map[Position]bool)
+	for _, pos := range m.SolutionPath {
+		solutionSet[pos] = true
+	}
+
 	for i, row := range m.Grid {
 		for j, cell := range row {
+			currentPos := Position{Row: i, Col: j}
+
 			if i == m.StartRow && j == m.StartCol {
 				sb.WriteRune('●') // Filled circle for start
 			} else if i == m.GoalRow && j == m.GoalCol {
 				sb.WriteRune('○') // Empty circle for goal
+			} else if len(m.SolutionPath) > 0 && solutionSet[currentPos] {
+				sb.WriteRune('·') // Solution path marker
 			} else if cell {
 				sb.WriteRune('#')
 			} else {

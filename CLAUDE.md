@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a feature-complete CLI application for generating ASCII mazes written in Go. The project follows Test-Driven Development (TDD) principles and implements a proper Depth-First Search maze generation algorithm with advanced CLI features.
+This is a feature-complete CLI application for generating ASCII mazes written in Go. The project follows Test-Driven Development (TDD) principles and implements multiple maze generation algorithms (DFS, Kruskal's) with advanced CLI features including solution path display.
 
 ## Commands
 
@@ -24,9 +24,11 @@ make help                # Show all available targets
 ### Direct Build and Run
 ```bash
 go build -o maze .
-./maze                           # Default 21x21 maze
+./maze                           # Default 21x21 maze (DFS algorithm)
 ./maze --size 15                 # Custom size maze
 ./maze --seed 123 --size 9       # Reproducible maze with seed
+./maze --algorithm kruskal --size 11  # Use Kruskal's algorithm
+./maze --solution --seed 42 --size 9  # Display solution path
 ./maze --help                    # Show usage information
 ```
 
@@ -80,28 +82,70 @@ The codebase follows a clean package structure with clear separation of concerns
 - **`main.go`**: Entry point with CLI argument parsing using Go's `flag` package
   - Handles `--size/-s` flag for maze dimensions (odd numbers, minimum 5)
   - Handles `--seed` flag for reproducible generation (string/integer)
+  - Handles `--algorithm/-a` flag for algorithm selection (dfs, kruskal)
+  - Handles `--solution` flag for solution path display
   - Input validation and error handling with user-friendly messages
 
 - **`internal/maze/generator.go`**: Core maze generation and representation
-  - `Maze` struct: Contains Width, Height, Grid, StartRow/Col, GoalRow/Col
-  - `Generator` struct: Implements DFS algorithm with configurable seed
-  - `NewGenerator()`: Creates generator with random seed
+  - `Maze` struct: Contains Width, Height, Grid, StartRow/Col, GoalRow/Col, SolutionPath
+  - `Generator` struct: Configurable generator with algorithm selection and seeding
+  - `NewGenerator()`: Creates generator with random seed and default DFS algorithm
   - `NewGeneratorWithSeed(string)`: Creates generator with specific seed
-  - `Generate(width, height)`: DFS maze generation algorithm
-  - `String()`: ASCII output with visual markers (● start, ○ goal)
+  - `NewGeneratorWithAlgorithm(string)`: Creates generator with specific algorithm
+  - `Generate(width, height)`: Multi-algorithm maze generation
+  - `String()`: ASCII output with visual markers (● start, ○ goal, · solution path)
 
-- **`internal/maze/generator_test.go`**: Comprehensive test suite
+- **`internal/maze/algorithm.go`**: Algorithm interface and factory pattern
+  - `Algorithm` interface: Common interface for all generation algorithms
+  - `NewAlgorithm(string)`: Factory function for algorithm creation
+  - `GetSupportedAlgorithms()`: Lists available algorithms (dfs, kruskal)
+
+- **`internal/maze/dfs.go`**: Depth-First Search algorithm implementation
+  - `DFSAlgorithm` struct: Implements recursive DFS with random direction selection
+  - Ensures perfect maze properties with single path connectivity
+
+- **`internal/maze/kruskal.go`**: Kruskal's algorithm with Union-Find implementation
+  - `KruskalAlgorithm` struct: Implements minimum spanning tree approach
+  - `UnionFind` data structure: Efficient cycle detection and path compression
+  - Creates mazes with different structural characteristics than DFS
+
+- **`internal/maze/pathfinder.go`**: BFS pathfinding for solution display
+  - `Position` struct: Represents coordinates in the maze
+  - `FindPath(maze)`: BFS algorithm for shortest path from start to goal
+  - Returns slice of positions representing the optimal solution path
+
+- **`internal/maze/generator_test.go`**: Comprehensive test suite for generation
   - `TestGenerateMaze`: Basic generation functionality
   - `TestMazeBoundaries`: Validates wall boundaries
   - `TestMazeString`: Output format validation
   - `TestMazePathConnectivity`: DFS connectivity verification
   - `TestMazeStartGoalMarkers`: Visual marker validation
+  - `TestNewGeneratorWithAlgorithm`: Algorithm selection testing
+  - `TestHashStringFunctionality`: Seed hashing validation
+
+- **`internal/maze/algorithm_test.go`**: Algorithm interface testing
+  - `TestNewAlgorithm`: Algorithm factory testing
+  - `TestGetSupportedAlgorithms`: Algorithm enumeration testing
+  - `TestDFSAlgorithmGenerate`: DFS-specific functionality
+  - `TestKruskalAlgorithmGenerate`: Kruskal-specific functionality
+  - Cross-algorithm reproducibility and connectivity testing
+
+- **`internal/maze/pathfinder_test.go`**: Pathfinding algorithm testing
+  - `TestFindPathBasic`: Basic pathfinding functionality
+  - `TestFindPathNoPath`: No-path scenario handling
+  - `TestFindPathStartBlocked`: Blocked start position testing
+  - `TestFindPathGoalBlocked`: Blocked goal position testing
+  - `TestFindPathSameStartGoal`: Edge case validation
+  - `TestFindPathConnectivity`: Path adjacency validation
 
 - **`main_test.go`**: CLI integration testing
   - `TestSizeValidation`: Input validation testing
   - `TestMazeDimensions`: Size parameter verification
   - `TestSeedReproducibility`: Seed consistency testing
-  - `TestDifferentSeedsDifferentMazes`: Seed variation testing
+  - `TestAlgorithmFlag`: Algorithm selection CLI testing
+  - `TestSolutionFlag`: Solution display CLI testing
+  - `TestSolutionPathContinuity`: Solution path validation
+  - `TestSolutionWithDifferentSeeds`: Solution variation testing
 
 ### Supporting Files
 - **`Makefile`**: Development workflow automation
@@ -112,10 +156,19 @@ The codebase follows a clean package structure with clear separation of concerns
 ### Maze Structure
 ```go
 type Maze struct {
-    Width, Height int
-    Grid         [][]bool  // true = wall, false = path
-    StartRow, StartCol int  // Start position (●)
-    GoalRow, GoalCol   int  // Goal position (○)
+    Width        int
+    Height       int
+    Grid         [][]bool   // true = wall, false = path
+    StartRow     int        // Start position (●)
+    StartCol     int
+    GoalRow      int        // Goal position (○)
+    GoalCol      int
+    SolutionPath []Position // Optional solution path from start to goal (·)
+}
+
+type Position struct {
+    Row int
+    Col int
 }
 ```
 
@@ -124,15 +177,19 @@ type Maze struct {
 ### Completed Phases
 - **Phase 1 (MVP)**: Basic maze generation ✅
 - **Phase 2**: CLI features (size, seed) ✅
-- **Phase 3**: DFS algorithm implementation ✅
+- **Phase 3**: Algorithm implementation (DFS, Kruskal's) ✅
+- **Phase 4**: Solution display feature ✅
 
 ### Key Features Implemented
-- **DFS Algorithm**: Proper maze generation ensuring single path between any two points
-- **Seed Support**: Reproducible mazes with string/integer seed conversion
-- **Size Customization**: Configurable dimensions with validation
-- **Visual Markers**: Start (●) and goal (○) positions
-- **Path Connectivity**: Guaranteed connectivity validation with DFS traversal
-- **Performance**: Optimized for large mazes (51x51 in ~0.01s)
+- **Multiple Algorithms**: DFS and Kruskal's algorithm implementations with distinct characteristics
+- **Algorithm Selection**: CLI flag support for choosing generation algorithm
+- **Solution Path Display**: BFS pathfinding with visual solution markers
+- **Seed Support**: Reproducible mazes with string/integer seed conversion for all algorithms
+- **Size Customization**: Configurable dimensions with validation (odd numbers, minimum 5)
+- **Visual Markers**: Start (●), goal (○), and solution path (·) positions
+- **Path Connectivity**: Guaranteed connectivity validation with algorithm-specific testing
+- **Performance**: Optimized for large mazes (51x51 in ~0.01s for both algorithms)
+- **Union-Find Structure**: Efficient cycle detection for Kruskal's algorithm
 
 ## Testing Standards
 
@@ -145,10 +202,11 @@ The project maintains exceptional testing standards:
 - **Reproducibility testing**: Seed consistency validation
 
 ### Test Categories
-1. **Unit Tests**: Core algorithm functionality
-2. **Integration Tests**: CLI interface and flag parsing
-3. **Property Tests**: Maze connectivity and validation
-4. **Performance Tests**: Generation speed and memory usage
+1. **Unit Tests**: Core algorithm functionality (DFS, Kruskal's, BFS pathfinding)
+2. **Integration Tests**: CLI interface and flag parsing (all algorithms and solution display)
+3. **Property Tests**: Maze connectivity and validation for all generation algorithms
+4. **Performance Tests**: Generation speed and memory usage across algorithms
+5. **Pathfinding Tests**: Solution path correctness and edge case handling
 
 ## Development Workflow
 
@@ -179,10 +237,27 @@ The project maintains exceptional testing standards:
 6. Recursively continue from target cell
 7. Backtrack when no valid neighbors exist
 
+### Kruskal's Algorithm Implementation
+1. Initialize grid with all walls
+2. Create list of all possible edges between adjacent cells
+3. Randomly shuffle the edge list using configured seed
+4. Initialize Union-Find data structure for cycle detection
+5. For each edge, check if connecting cells would create a cycle
+6. If no cycle, connect the cells by removing the wall
+7. Continue until all cells are connected in a spanning tree
+
+### BFS Pathfinding Implementation
+1. Initialize BFS queue with start position
+2. Track visited cells and parent relationships
+3. Explore neighbors in breadth-first order
+4. When goal is reached, reconstruct path using parent pointers
+5. Return shortest path from start to goal as Position slice
+
 ### Seed Handling
 - String seeds converted to int64 via `strconv.ParseInt`
 - Failed parsing falls back to custom string hashing function
 - Seed applied to `rand.New(rand.NewSource(seed))` for reproducibility
+- Same seed produces identical results across all algorithms
 
 ## Dependencies
 
