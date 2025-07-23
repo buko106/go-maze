@@ -16,12 +16,14 @@ func NewAlgorithm(algorithmName string) (Algorithm, error) {
 	switch algorithmName {
 	case "dfs":
 		return &DFSAlgorithm{}, nil
+	case "kruskal":
+		return &KruskalAlgorithm{}, nil
 	default:
-		return nil, fmt.Errorf("unknown algorithm: %s (supported: dfs)", algorithmName)
+		return nil, fmt.Errorf("unknown algorithm: %s (supported: dfs, kruskal)", algorithmName)
 	}
 }
 
 // GetSupportedAlgorithms returns a list of supported algorithm names
 func GetSupportedAlgorithms() []string {
-	return []string{"dfs"}
+	return []string{"dfs", "kruskal"}
 }

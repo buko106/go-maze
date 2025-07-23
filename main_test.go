@@ -182,10 +182,20 @@ func TestAlgorithmFlag(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "invalid algorithm",
+			name:    "kruskal algorithm short flag",
 			args:    []string{"-s", "9", "-a", "kruskal"},
+			wantErr: false,
+		},
+		{
+			name:    "kruskal algorithm long flag",
+			args:    []string{"-s", "9", "--algorithm", "kruskal"},
+			wantErr: false,
+		},
+		{
+			name:    "invalid algorithm",
+			args:    []string{"-s", "9", "-a", "invalid"},
 			wantErr: true,
-			errMsg:  "Unsupported algorithm 'kruskal'",
+			errMsg:  "Unsupported algorithm 'invalid'",
 		},
 		{
 			name:    "invalid algorithm long flag",

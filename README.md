@@ -1,20 +1,21 @@
 # go-maze
 
-A feature-rich command-line maze generator written in Go using Depth-First Search algorithm.
+A feature-rich command-line maze generator written in Go with multiple generation algorithms.
 
-## Version 0.2.0
+## Version 0.3.0
 
-Complete maze generation with customizable size, reproducible seeds, and visual start/goal markers.
+Complete maze generation with multiple algorithms, customizable size, reproducible seeds, and visual start/goal markers.
 
 ### Features
 
-- **Proper maze generation** using Depth-First Search (DFS) algorithm
+- **Multiple algorithms**: Depth-First Search (DFS) and Kruskal's algorithm support
+- **Algorithm selection** with `-a, --algorithm` flag (dfs, kruskal)
 - **Customizable size** with `-s, --size` flag (odd numbers, minimum 5)
 - **Reproducible mazes** with `--seed` flag for consistent output
 - **Visual markers**: Start (●) and Goal (○) positions
 - **Path connectivity**: Guaranteed single path between any two points
 - **Fast performance**: Generates 51x51 mazes in ~0.01s
-- **Comprehensive testing** with >95% test coverage
+- **Comprehensive testing** with >95% test coverage and TDD approach
 
 ### Installation
 
@@ -33,7 +34,7 @@ go build -o maze .
 
 #### Basic Usage
 ```bash
-# Generate default 21x21 maze
+# Generate default 21x21 maze (DFS algorithm)
 ./maze
 
 # Generate custom size maze
@@ -43,15 +44,22 @@ go build -o maze .
 # Generate reproducible maze with seed
 ./maze --seed 123 --size 11
 
+# Use different algorithms
+./maze -a dfs --size 15        # Depth-First Search (default)
+./maze -a kruskal --size 15    # Kruskal's algorithm
+
+# Algorithm with seed for reproducibility
+./maze -a kruskal --seed 42 --size 9
+
 # Show help
 ./maze --help
 ```
 
 #### Example Outputs
 
-**Small maze with seed:**
+**DFS Algorithm with seed:**
 ```bash
-./maze --seed 123 -s 9
+./maze -a dfs --seed 123 -s 9
 ```
 ```
 #########
@@ -65,9 +73,25 @@ go build -o maze .
 #########
 ```
 
-**Larger maze:**
+**Kruskal Algorithm with same seed:**
 ```bash
-./maze --seed 456 -s 15
+./maze -a kruskal --seed 123 -s 9
+```
+```
+#########
+#●    # #
+##### # #
+#       #
+# #######
+#       #
+# # ### #
+# #   #○#
+#########
+```
+
+**Larger DFS maze:**
+```bash
+./maze -a dfs --seed 456 -s 15
 ```
 ```
 ###############
@@ -84,6 +108,28 @@ go build -o maze .
 #   #     #   #
 ### ####### # #
 #          #○#
+###############
+```
+
+**Larger Kruskal maze:**
+```bash
+./maze -a kruskal --seed 456 -s 15
+```
+```
+###############
+#●        #   #
+# ##### ##### #
+#     # #     #
+# # # ### #####
+# # # #       #
+##### ### #####
+#           # #
+# # ### ### # #
+# #   #   #   #
+# ### ##### ###
+#   # #   #   #
+##### # ### ###
+#     #      ○#
 ###############
 ```
 
@@ -137,8 +183,11 @@ go fmt ./...
 
 - **`main.go`**: Entry point and CLI argument parsing with `flag` package
 - **`internal/maze/`**: Core maze generation and representation
-  - `generator.go`: DFS algorithm implementation with seed support
-  - `generator_test.go`: Comprehensive test suite with connectivity testing
+  - `generator.go`: Generator with algorithm interface and seed support
+  - `algorithm.go`: Algorithm interface and factory pattern
+  - `dfs.go`: Depth-First Search algorithm implementation
+  - `kruskal.go`: Kruskal's algorithm with Union-Find data structure
+  - `*_test.go`: Comprehensive test suites with connectivity and reproducibility testing
 - **`Makefile`**: Development workflow automation
 - **`TODO.md`**: Detailed development roadmap and task tracking
 
@@ -152,34 +201,48 @@ go fmt ./...
 5. Recursively continue from new cell
 6. Backtrack when no unvisited neighbors remain
 
-This ensures:
+**Kruskal's Algorithm Maze Generation:**
+1. Start with grid of all walls
+2. Create list of all possible edges between adjacent cells
+3. Randomly shuffle the edge list
+4. Use Union-Find data structure to track connected components
+5. For each edge, if cells are in different components, connect them
+6. Continue until all cells are connected in a single component
+
+**Both algorithms ensure:**
 - **Perfect maze**: Exactly one path between any two points
 - **No isolated areas**: All path cells are connected
 - **Randomness**: Different seed values produce different mazes
 - **Reproducibility**: Same seed always produces identical maze
+- **Different patterns**: Each algorithm creates distinct maze characteristics
 
 ### CLI Options
 
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
+| `--algorithm` | `-a` | dfs | Algorithm for maze generation (dfs, kruskal) |
 | `--size` | `-s` | 21 | Size of square maze (must be odd, minimum 5) |
 | `--seed` | - | random | Seed for reproducible generation (string/integer) |
 | `--help` | `-h` | - | Show help message |
 
 ### Completed Features
 
+- [x] **Multiple algorithms**: DFS and Kruskal's algorithm implementations
+- [x] **Algorithm selection**: CLI flag support for algorithm choice
 - [x] **Size specification**: Custom maze dimensions
-- [x] **Seed support**: Reproducible maze generation
-- [x] **DFS algorithm**: Proper maze generation with guaranteed connectivity
+- [x] **Seed support**: Reproducible maze generation for both algorithms
 - [x] **Visual markers**: Start (●) and goal (○) positions
+- [x] **Path connectivity**: Guaranteed single path with comprehensive validation
 - [x] **Performance optimization**: Fast generation for large mazes
-- [x] **Comprehensive testing**: Full test coverage with TDD approach
+- [x] **Comprehensive testing**: >95% test coverage with TDD approach
+- [x] **Union-Find structure**: Efficient cycle detection for Kruskal's algorithm
 
 ### Upcoming Features
 
-- [ ] **Algorithm selection**: Kruskal, Prim algorithms (`--algorithm` flag)
+- [ ] **Additional algorithms**: Prim's algorithm implementation
 - [ ] **Output formats**: Unicode box-drawing, JSON export (`--format` flag)
 - [ ] **Solution display**: Show path from start to goal (`--solution` flag)
+- [ ] **Performance comparison**: Benchmarking between algorithms
 - [ ] **Custom start/goal**: Specify positions (`--start`, `--goal` flags)
 - [ ] **Version info**: Display version information (`--version` flag)
 
