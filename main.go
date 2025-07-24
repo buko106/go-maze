@@ -14,6 +14,8 @@ func main() {
 	seed := flag.String("seed", "", "Seed for reproducible maze generation (integer)")
 	algorithm := flag.String("a", "dfs", "Algorithm for maze generation (dfs, kruskal, wilson)")
 	flag.StringVar(algorithm, "algorithm", "dfs", "Algorithm for maze generation (dfs, kruskal, wilson)")
+	format := flag.String("f", "ascii", "Output format (ascii, unicode, json)")
+	flag.StringVar(format, "format", "ascii", "Output format (ascii, unicode, json)")
 	solution := flag.Bool("solution", false, "Display the solution path from start to goal")
 	flag.Parse()
 
@@ -41,6 +43,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Validate format
+	supportedFormats := maze.GetSupportedFormats()
+	formatValid := false
+	for _, fmt := range supportedFormats {
+		if *format == fmt {
+			formatValid = true
+			break
+		}
+	}
+	if !formatValid {
+		fmt.Fprintf(os.Stderr, "Error: Unsupported format '%s', supported formats: %v\n", *format, supportedFormats)
+		os.Exit(1)
+	}
+
 	var generator *maze.Generator
 	var err error
 
@@ -65,5 +81,12 @@ func main() {
 		}
 	}
 
-	fmt.Print(m.String())
+	// Create renderer and output maze
+	renderer, err := maze.NewRenderer(*format)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating renderer: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Print(renderer.Render(m))
 }

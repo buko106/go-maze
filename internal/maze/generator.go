@@ -6,7 +6,6 @@ package maze
 import (
 	"math/rand"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -126,31 +125,6 @@ func (g *Generator) Generate(width, height int) *Maze {
 }
 
 func (m *Maze) String() string {
-	var sb strings.Builder
-
-	// Create a set of solution positions for quick lookup
-	solutionSet := make(map[Position]bool)
-	for _, pos := range m.SolutionPath {
-		solutionSet[pos] = true
-	}
-
-	for i, row := range m.Grid {
-		for j, cell := range row {
-			currentPos := Position{Row: i, Col: j}
-
-			if i == m.StartRow && j == m.StartCol {
-				sb.WriteRune('●') // Filled circle for start
-			} else if i == m.GoalRow && j == m.GoalCol {
-				sb.WriteRune('○') // Empty circle for goal
-			} else if len(m.SolutionPath) > 0 && solutionSet[currentPos] {
-				sb.WriteRune('·') // Solution path marker
-			} else if cell {
-				sb.WriteRune('#')
-			} else {
-				sb.WriteRune(' ')
-			}
-		}
-		sb.WriteRune('\n')
-	}
-	return sb.String()
+	renderer := &ASCIIRenderer{}
+	return renderer.Render(m)
 }

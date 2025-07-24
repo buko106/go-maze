@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 	"testing"
@@ -410,5 +411,229 @@ func TestSolutionWithDifferentSeeds(t *testing.T) {
 	// Different seeds should produce different solutions
 	if string(output1) == string(output2) {
 		t.Error("Different seeds should produce different solution paths")
+	}
+}
+
+// Test format flag functionality
+func TestFormatFlag(t *testing.T) {
+	tests := []struct {
+		name        string
+		args        []string
+		wantErr     bool
+		errMsg      string
+		checkOutput func(string) error
+	}{
+		{
+			name:    "default ascii format",
+			args:    []string{"-s", "9", "--seed", "123"},
+			wantErr: false,
+			checkOutput: func(output string) error {
+				if !strings.Contains(output, "#") {
+					return fmt.Errorf("ASCII output should contain wall characters (#)")
+				}
+				if !strings.Contains(output, "●") {
+					return fmt.Errorf("ASCII output should contain start marker (●)")
+				}
+				if !strings.Contains(output, "○") {
+					return fmt.Errorf("ASCII output should contain goal marker (○)")
+				}
+				return nil
+			},
+		},
+		{
+			name:    "explicit ascii format short flag",
+			args:    []string{"-s", "9", "--seed", "123", "-f", "ascii"},
+			wantErr: false,
+			checkOutput: func(output string) error {
+				if !strings.Contains(output, "#") {
+					return fmt.Errorf("ASCII output should contain wall characters (#)")
+				}
+				if !strings.Contains(output, "●") {
+					return fmt.Errorf("ASCII output should contain start marker (●)")
+				}
+				if !strings.Contains(output, "○") {
+					return fmt.Errorf("ASCII output should contain goal marker (○)")
+				}
+				return nil
+			},
+		},
+		{
+			name:    "explicit ascii format long flag",
+			args:    []string{"-s", "9", "--seed", "123", "--format", "ascii"},
+			wantErr: false,
+			checkOutput: func(output string) error {
+				if !strings.Contains(output, "#") {
+					return fmt.Errorf("ASCII output should contain wall characters (#)")
+				}
+				if !strings.Contains(output, "●") {
+					return fmt.Errorf("ASCII output should contain start marker (●)")
+				}
+				if !strings.Contains(output, "○") {
+					return fmt.Errorf("ASCII output should contain goal marker (○)")
+				}
+				return nil
+			},
+		},
+		{
+			name:    "unicode format short flag",
+			args:    []string{"-s", "9", "--seed", "123", "-f", "unicode"},
+			wantErr: false,
+			checkOutput: func(output string) error {
+				boxDrawingChars := []string{"─", "│", "┌", "┐", "└", "┘", "├", "┤", "┬", "┴", "┼", "╵", "╷", "╴", "╶", "▪"}
+				foundBoxDrawing := false
+				for _, char := range boxDrawingChars {
+					if strings.Contains(output, char) {
+						foundBoxDrawing = true
+						break
+					}
+				}
+				if !foundBoxDrawing {
+					return fmt.Errorf("Unicode output should contain box-drawing characters")
+				}
+				if !strings.Contains(output, "◉") {
+					return fmt.Errorf("Unicode output should contain start marker (◉)")
+				}
+				if !strings.Contains(output, "◎") {
+					return fmt.Errorf("Unicode output should contain goal marker (◎)")
+				}
+				return nil
+			},
+		},
+		{
+			name:    "unicode format long flag",
+			args:    []string{"-s", "9", "--seed", "123", "--format", "unicode"},
+			wantErr: false,
+			checkOutput: func(output string) error {
+				boxDrawingChars := []string{"─", "│", "┌", "┐", "└", "┘", "├", "┤", "┬", "┴", "┼", "╵", "╷", "╴", "╶", "▪"}
+				foundBoxDrawing := false
+				for _, char := range boxDrawingChars {
+					if strings.Contains(output, char) {
+						foundBoxDrawing = true
+						break
+					}
+				}
+				if !foundBoxDrawing {
+					return fmt.Errorf("Unicode output should contain box-drawing characters")
+				}
+				if !strings.Contains(output, "◉") {
+					return fmt.Errorf("Unicode output should contain start marker (◉)")
+				}
+				if !strings.Contains(output, "◎") {
+					return fmt.Errorf("Unicode output should contain goal marker (◎)")
+				}
+				return nil
+			},
+		},
+		{
+			name:    "json format short flag",
+			args:    []string{"-s", "9", "--seed", "123", "-f", "json"},
+			wantErr: false,
+			checkOutput: func(output string) error {
+				if !strings.Contains(output, "\"width\"") {
+					return fmt.Errorf("JSON output should contain width field")
+				}
+				if !strings.Contains(output, "\"height\"") {
+					return fmt.Errorf("JSON output should contain height field")
+				}
+				if !strings.Contains(output, "\"grid\"") {
+					return fmt.Errorf("JSON output should contain grid field")
+				}
+				if !strings.Contains(output, "\"start\"") {
+					return fmt.Errorf("JSON output should contain start field")
+				}
+				if !strings.Contains(output, "\"goal\"") {
+					return fmt.Errorf("JSON output should contain goal field")
+				}
+				return nil
+			},
+		},
+		{
+			name:    "json format long flag",
+			args:    []string{"-s", "9", "--seed", "123", "--format", "json"},
+			wantErr: false,
+			checkOutput: func(output string) error {
+				if !strings.Contains(output, "\"width\"") {
+					return fmt.Errorf("JSON output should contain width field")
+				}
+				if !strings.Contains(output, "\"height\"") {
+					return fmt.Errorf("JSON output should contain height field")
+				}
+				if !strings.Contains(output, "\"grid\"") {
+					return fmt.Errorf("JSON output should contain grid field")
+				}
+				if !strings.Contains(output, "\"start\"") {
+					return fmt.Errorf("JSON output should contain start field")
+				}
+				if !strings.Contains(output, "\"goal\"") {
+					return fmt.Errorf("JSON output should contain goal field")
+				}
+				return nil
+			},
+		},
+		{
+			name:    "invalid format short flag",
+			args:    []string{"-s", "9", "-f", "invalid"},
+			wantErr: true,
+			errMsg:  "Unsupported format 'invalid'",
+		},
+		{
+			name:    "invalid format long flag",
+			args:    []string{"-s", "9", "--format", "xml"},
+			wantErr: true,
+			errMsg:  "Unsupported format 'xml'",
+		},
+		{
+			name:    "format with solution flag",
+			args:    []string{"-s", "9", "--seed", "123", "--format", "unicode", "--solution"},
+			wantErr: false,
+			checkOutput: func(output string) error {
+				if !strings.Contains(output, "•") {
+					return fmt.Errorf("Unicode output with solution should contain solution path markers (•)")
+				}
+				if !strings.Contains(output, "◉") {
+					return fmt.Errorf("Unicode output should contain start marker (◉)")
+				}
+				if !strings.Contains(output, "◎") {
+					return fmt.Errorf("Unicode output should contain goal marker (◎)")
+				}
+				boxDrawingChars := []string{"─", "│", "┌", "┐", "└", "┘", "├", "┤", "┬", "┴", "┼", "╵", "╷", "╴", "╶", "▪"}
+				foundBoxDrawing := false
+				for _, char := range boxDrawingChars {
+					if strings.Contains(output, char) {
+						foundBoxDrawing = true
+						break
+					}
+				}
+				if !foundBoxDrawing {
+					return fmt.Errorf("Unicode output should contain box-drawing characters")
+				}
+				return nil
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := exec.Command("go", append([]string{"run", "main.go"}, tt.args...)...)
+			output, err := cmd.CombinedOutput()
+
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("Expected error but got none")
+				}
+				if !strings.Contains(string(output), tt.errMsg) {
+					t.Errorf("Expected error message '%s' but got '%s'", tt.errMsg, string(output))
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Unexpected error: %v, output: %s", err, string(output))
+				}
+				if tt.checkOutput != nil {
+					if checkErr := tt.checkOutput(string(output)); checkErr != nil {
+						t.Error(checkErr)
+					}
+				}
+			}
+		})
 	}
 }

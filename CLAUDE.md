@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a feature-complete CLI application for generating ASCII mazes written in Go. The project follows Test-Driven Development (TDD) principles and implements multiple maze generation algorithms (DFS, Kruskal's, Wilson's) with advanced CLI features including solution path display.
+This is a feature-complete CLI application for generating mazes in multiple formats written in Go. The project follows Test-Driven Development (TDD) principles and implements multiple maze generation algorithms (DFS, Kruskal's, Wilson's) with multiple output formats (ASCII, Unicode, JSON) and advanced CLI features including solution path display.
 
 ## Commands
 
@@ -29,7 +29,10 @@ go build -o maze .
 ./maze --seed 123 --size 9       # Reproducible maze with seed
 ./maze --algorithm kruskal --size 11  # Use Kruskal's algorithm
 ./maze --algorithm wilson --size 11   # Use Wilson's algorithm
+./maze --format unicode --size 11     # Use Unicode box-drawing output
+./maze --format json --size 11        # Use JSON output format
 ./maze --solution --seed 42 --size 9  # Display solution path
+./maze -f unicode --solution --seed 42 --size 9  # Unicode with solution
 ./maze --help                    # Show usage information
 ```
 
@@ -120,6 +123,24 @@ The codebase follows a clean package structure with clear separation of concerns
   - `FindPath(maze)`: BFS algorithm for shortest path from start to goal
   - Returns slice of positions representing the optimal solution path
 
+- **`internal/maze/renderer.go`**: Renderer interface and factory pattern
+  - `Renderer` interface: Common interface for all output formats
+  - `NewRenderer(format)`: Factory function for renderer creation  
+  - `GetSupportedFormats()`: Lists available formats (ascii, unicode, json)
+
+- **`internal/maze/ascii_renderer.go`**: ASCII format renderer (default)
+  - `ASCIIRenderer` struct: Renders mazes using ASCII characters
+  - Uses '#', ' ', '●', '○', '·' characters for walls, paths, start, goal, solution
+
+- **`internal/maze/unicode_renderer.go`**: Unicode box-drawing renderer
+  - `UnicodeRenderer` struct: Renders mazes using Unicode box-drawing characters
+  - `getBoxDrawingChar()`: Connection-aware character selection logic
+  - Uses '┌┐└┘├┤┬┴┼─│╵╷╴╶▪', '◉', '◎', '•' for walls, start, goal, solution
+
+- **`internal/maze/json_renderer.go`**: JSON format renderer
+  - `JSONRenderer` struct: Renders mazes as structured JSON data
+  - `MazeJSON` struct: JSON serialization structure with grid, positions, solution
+
 - **`internal/maze/generator_test.go`**: Comprehensive test suite for generation
   - `TestGenerateMaze`: Basic generation functionality
   - `TestMazeBoundaries`: Validates wall boundaries
@@ -145,6 +166,19 @@ The codebase follows a clean package structure with clear separation of concerns
   - `TestFindPathSameStartGoal`: Edge case validation
   - `TestFindPathConnectivity`: Path adjacency validation
 
+- **`internal/maze/renderer_test.go`**: Output format testing
+  - `TestNewRenderer`: Renderer factory testing
+  - `TestGetSupportedFormats`: Format enumeration testing
+  - `TestASCIIRenderer`: ASCII format functionality
+  - `TestUnicodeRenderer`: Unicode format functionality with box-drawing characters
+  - `TestJSONRenderer`: JSON format functionality and structure validation
+  - `TestRendererWithSolutionPath`: Solution display across all formats
+  - `TestUnicodeSpecificCharacters`: Unicode character validation
+  - `TestASCIIRendererSnapshot`: ASCII snapshot regression testing
+  - `TestUnicodeRendererSnapshot`: Unicode snapshot regression testing
+  - `TestJSONRendererSnapshot`: JSON snapshot regression testing
+  - Snapshot tests for both solution and no-solution variants
+
 - **`main_test.go`**: CLI integration testing
   - `TestSizeValidation`: Input validation testing
   - `TestMazeDimensions`: Size parameter verification
@@ -153,6 +187,13 @@ The codebase follows a clean package structure with clear separation of concerns
   - `TestSolutionFlag`: Solution display CLI testing
   - `TestSolutionPathContinuity`: Solution path validation
   - `TestSolutionWithDifferentSeeds`: Solution variation testing
+  - `TestFormatFlag`: Format selection CLI testing with all three formats
+
+- **`main_snapshot_test.go`**: CLI snapshot testing
+  - `TestFormatFlagSnapshot`: CLI snapshot tests for all formats
+  - ASCII, Unicode, and JSON format testing with fixed seed
+  - Both solution and no-solution variants for each format
+  - JSON structure validation with field verification
 
 ### Supporting Files
 - **`Makefile`**: Development workflow automation
@@ -185,18 +226,22 @@ type Position struct {
 - **Phase 1 (MVP)**: Basic maze generation ✅
 - **Phase 2**: CLI features (size, seed) ✅
 - **Phase 3**: Algorithm implementation (DFS, Kruskal's, Wilson's) ✅
-- **Phase 4**: Solution display feature ✅
+- **Phase 4**: Enhancement and polish (output formats, solution display) ✅
 
 ### Key Features Implemented
 - **Multiple Algorithms**: DFS, Kruskal's, and Wilson's algorithm implementations with distinct characteristics
 - **Algorithm Selection**: CLI flag support for choosing generation algorithm
+- **Multiple Output Formats**: ASCII, Unicode box-drawing, and JSON with renderer interface pattern
+- **Format Selection**: CLI flag support with validation for output format choice
 - **Solution Path Display**: BFS pathfinding with visual solution markers
 - **Seed Support**: Reproducible mazes with string/integer seed conversion for all algorithms
 - **Size Customization**: Configurable dimensions with validation (odd numbers, minimum 5)
-- **Visual Markers**: Start (●), goal (○), and solution path (·) positions
+- **Visual Markers**: Start (●/◉), goal (○/◎), and solution path (·/•) positions
 - **Path Connectivity**: Guaranteed connectivity validation with algorithm-specific testing
 - **Performance**: Optimized for large mazes (51x51 in ~0.01s for all algorithms)
 - **Union-Find Structure**: Efficient cycle detection for Kruskal's algorithm
+- **Unicode Rendering**: Connection-aware box-drawing character selection
+- **JSON Export**: Structured data output for programmatic use
 
 ## Testing Standards
 
@@ -210,10 +255,12 @@ The project maintains exceptional testing standards:
 
 ### Test Categories
 1. **Unit Tests**: Core algorithm functionality (DFS, Kruskal's, Wilson's, BFS pathfinding)
-2. **Integration Tests**: CLI interface and flag parsing (all algorithms and solution display)
+2. **Integration Tests**: CLI interface and flag parsing (all algorithms, formats, and solution display)
 3. **Property Tests**: Maze connectivity and validation for all generation algorithms
 4. **Performance Tests**: Generation speed and memory usage across algorithms
 5. **Pathfinding Tests**: Solution path correctness and edge case handling
+6. **Format Tests**: Output format validation and renderer functionality
+7. **Snapshot Tests**: Regression testing for consistent output across formats
 
 ## Development Workflow
 
