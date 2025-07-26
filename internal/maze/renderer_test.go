@@ -203,6 +203,72 @@ func TestJSONRenderer(t *testing.T) {
 	}
 }
 
+func TestJSONRendererWithAnalysis(t *testing.T) {
+	// Create a simple test maze
+	maze := &Maze{
+		Width:    5,
+		Height:   5,
+		Grid:     createTestGrid(5, 5),
+		StartRow: 1,
+		StartCol: 1,
+		GoalRow:  3,
+		GoalCol:  3,
+	}
+
+	// Create mock analysis
+	analysis := &MazeAnalysis{
+		TotalCells:      25,
+		PathCells:       9,
+		WallCells:       16,
+		PathDensity:     0.36,
+		DeadEnds:        2,
+		Junctions:       1,
+		Corridors:       6,
+		DeadEndRatio:    0.22,
+		JunctionRatio:   0.11,
+		SolutionLength:  5,
+		OptimalRatio:    0.56,
+		DifficultyScore: 45.5,
+		DifficultyLevel: "Medium",
+	}
+
+	renderer := &JSONRenderer{}
+	output := renderer.RenderWithAnalysis(maze, analysis)
+
+	// Parse JSON to verify structure
+	var parsed JSON
+	err := json.Unmarshal([]byte(output), &parsed)
+	if err != nil {
+		t.Errorf("Failed to parse JSON output with analysis: %v", err)
+		return
+	}
+
+	// Verify basic maze structure
+	if parsed.Width != 5 {
+		t.Errorf("Expected width 5 in JSON, got %d", parsed.Width)
+	}
+	if parsed.Height != 5 {
+		t.Errorf("Expected height 5 in JSON, got %d", parsed.Height)
+	}
+
+	// Verify analysis is included
+	if parsed.Analysis == nil {
+		t.Error("Expected analysis data in JSON output, got nil")
+		return
+	}
+
+	// Verify analysis data
+	if parsed.Analysis.TotalCells != 25 {
+		t.Errorf("Expected analysis total_cells 25, got %d", parsed.Analysis.TotalCells)
+	}
+	if parsed.Analysis.DifficultyLevel != "Medium" {
+		t.Errorf("Expected analysis difficulty_level 'Medium', got '%s'", parsed.Analysis.DifficultyLevel)
+	}
+	if parsed.Analysis.DifficultyScore != 45.5 {
+		t.Errorf("Expected analysis difficulty_score 45.5, got %f", parsed.Analysis.DifficultyScore)
+	}
+}
+
 // TestRendererWithSolutionPath tests renderers with solution path
 func TestRendererWithSolutionPath(t *testing.T) {
 	// Create a maze with solution path

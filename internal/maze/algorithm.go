@@ -20,12 +20,16 @@ func NewAlgorithm(algorithmName string) (Algorithm, error) {
 		return &KruskalAlgorithm{}, nil
 	case "wilson":
 		return &WilsonAlgorithm{}, nil
+	case "hunt-kill":
+		return &HuntKillAlgorithm{}, nil
+	case "growing-tree":
+		return NewGrowingTreeWithDifficulty(DifficultyMedium), nil
 	default:
-		return nil, fmt.Errorf("unknown algorithm: %s (supported: dfs, kruskal, wilson)", algorithmName)
+		return nil, fmt.Errorf("unknown algorithm: %s (supported: dfs, kruskal, wilson, hunt-kill, growing-tree)", algorithmName)
 	}
 }
 
 // GetSupportedAlgorithms returns a list of supported algorithm names
 func GetSupportedAlgorithms() []string {
-	return []string{"dfs", "kruskal", "wilson"}
+	return []string{"dfs", "kruskal", "wilson", "hunt-kill", "growing-tree"}
 }
