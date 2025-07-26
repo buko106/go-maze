@@ -3,7 +3,6 @@
 # Variables
 BINARY_NAME=maze
 MAIN_PATH=./
-BUILD_DIR=./bin
 GO_FILES=$(shell find . -name "*.go" -type f)
 
 # Default target
@@ -12,11 +11,10 @@ all: build
 
 # Build the binary
 .PHONY: build
-build: $(BUILD_DIR)/$(BINARY_NAME)
+build: $(BINARY_NAME)
 
-$(BUILD_DIR)/$(BINARY_NAME): $(GO_FILES)
-	@mkdir -p $(BUILD_DIR)
-	go build -o $(BUILD_DIR)/$(BINARY_NAME) $(MAIN_PATH)
+$(BINARY_NAME): $(GO_FILES)
+	go build -o $(BINARY_NAME) $(MAIN_PATH)
 
 # Build and install to current directory
 .PHONY: install
@@ -68,7 +66,6 @@ lint-go:
 # Clean build artifacts
 .PHONY: clean
 clean:
-	rm -rf $(BUILD_DIR)
 	rm -f $(BINARY_NAME)
 	rm -f coverage.out coverage.html
 
@@ -103,7 +100,7 @@ deps:
 .PHONY: help
 help:
 	@echo "Available targets:"
-	@echo "  build         - Build the maze binary"
+	@echo "  build         - Build the maze binary to ./maze"
 	@echo "  install       - Build and install to current directory"
 	@echo "  test          - Run all tests"
 	@echo "  test-verbose  - Run tests with verbose output"

@@ -11,7 +11,7 @@ This is a feature-complete CLI application for generating mazes in multiple form
 ### Primary Development Commands (Use Makefile)
 ```bash
 make dev                  # Full development workflow: clean, format, lint, test, build
-make build               # Build the binary to ./bin/maze
+make build               # Build the binary to ./maze
 make install             # Build to current directory as ./maze
 make test                # Run all tests
 make test-verbose        # Run tests with verbose output
