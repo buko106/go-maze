@@ -64,6 +64,28 @@ func NewGeneratorWithSeed(seedStr string) *Generator {
 	}
 }
 
+// NewGeneratorWithAlgorithmAndDifficulty creates a Generator with a specific algorithm and difficulty
+func NewGeneratorWithAlgorithmAndDifficulty(algorithmName, difficulty string) (*Generator, error) {
+	var algorithm Algorithm
+	var err error
+
+	// Handle growing-tree algorithm with difficulty
+	if algorithmName == "growing-tree" {
+		difficultyLevel := DifficultyLevel(difficulty)
+		algorithm = NewGrowingTreeWithDifficulty(difficultyLevel)
+	} else {
+		algorithm, err = NewAlgorithm(algorithmName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &Generator{
+		rand:      rand.New(rand.NewSource(time.Now().UnixNano())), // #nosec G404 - not for cryptographic use
+		algorithm: algorithm,
+	}, nil
+}
+
 // NewGeneratorWithSeedAndAlgorithm creates a Generator with specific seed and algorithm
 func NewGeneratorWithSeedAndAlgorithm(seedStr, algorithmName string) (*Generator, error) {
 	// Convert string seed to int64
@@ -76,6 +98,34 @@ func NewGeneratorWithSeedAndAlgorithm(seedStr, algorithmName string) (*Generator
 	algorithm, err := NewAlgorithm(algorithmName)
 	if err != nil {
 		return nil, err
+	}
+
+	return &Generator{
+		rand:      rand.New(rand.NewSource(seed)), // #nosec G404 - not for cryptographic use
+		algorithm: algorithm,
+	}, nil
+}
+
+// NewGeneratorWithSeedAlgorithmAndDifficulty creates a Generator with specific seed, algorithm and difficulty
+func NewGeneratorWithSeedAlgorithmAndDifficulty(seedStr, algorithmName, difficulty string) (*Generator, error) {
+	// Convert string seed to int64
+	seed, err := strconv.ParseInt(seedStr, 10, 64)
+	if err != nil {
+		// If parsing fails, use string hash as fallback
+		seed = hashString(seedStr)
+	}
+
+	var algorithm Algorithm
+
+	// Handle growing-tree algorithm with difficulty
+	if algorithmName == "growing-tree" {
+		difficultyLevel := DifficultyLevel(difficulty)
+		algorithm = NewGrowingTreeWithDifficulty(difficultyLevel)
+	} else {
+		algorithm, err = NewAlgorithm(algorithmName)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &Generator{

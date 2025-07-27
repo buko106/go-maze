@@ -11,17 +11,18 @@ type JSONRenderer struct{}
 
 // JSON represents the JSON structure for maze output.
 type JSON struct {
-	Width        int        `json:"width"`
-	Height       int        `json:"height"`
-	Grid         [][]bool   `json:"grid"`
-	Start        Position   `json:"start"`
-	Goal         Position   `json:"goal"`
-	SolutionPath []Position `json:"solution_path,omitempty"`
+	Width        int           `json:"width"`
+	Height       int           `json:"height"`
+	Grid         [][]bool      `json:"grid"`
+	Start        Position      `json:"start"`
+	Goal         Position      `json:"goal"`
+	SolutionPath []Position    `json:"solution_path,omitempty"`
+	Analysis     *MazeAnalysis `json:"analysis,omitempty"`
 }
 
-// Render generates a JSON representation of the maze.
-// Returns a formatted JSON string with maze structure and metadata.
-func (r *JSONRenderer) Render(m *Maze) string {
+// RenderWithAnalysis generates a JSON representation of the maze with optional analysis.
+// Returns a formatted JSON string with maze structure, metadata, and analysis if provided.
+func (r *JSONRenderer) RenderWithAnalysis(m *Maze, analysis *MazeAnalysis) string {
 	mazeJSON := JSON{
 		Width:  m.Width,
 		Height: m.Height,
@@ -35,6 +36,7 @@ func (r *JSONRenderer) Render(m *Maze) string {
 			Col: m.GoalCol,
 		},
 		SolutionPath: m.SolutionPath,
+		Analysis:     analysis,
 	}
 
 	jsonBytes, err := json.MarshalIndent(mazeJSON, "", "  ")
@@ -43,4 +45,10 @@ func (r *JSONRenderer) Render(m *Maze) string {
 	}
 
 	return string(jsonBytes)
+}
+
+// Render generates a JSON representation of the maze.
+// Returns a formatted JSON string with maze structure and metadata.
+func (r *JSONRenderer) Render(m *Maze) string {
+	return r.RenderWithAnalysis(m, nil)
 }

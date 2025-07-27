@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a feature-complete CLI application for generating mazes in multiple formats written in Go. The project follows Test-Driven Development (TDD) principles and implements multiple maze generation algorithms (DFS, Kruskal's, Wilson's) with multiple output formats (ASCII, Unicode, JSON) and advanced CLI features including solution path display.
+This is a feature-complete CLI application for generating mazes in multiple formats written in Go. The project follows Test-Driven Development (TDD) principles and implements 5 maze generation algorithms (DFS, Kruskal's, Wilson's, Hunt-Kill, Growing Tree) with multiple output formats (ASCII, Unicode, JSON), configurable difficulty levels, maze complexity analysis, and advanced CLI features including solution path display.
 
 ## Commands
 
 ### Primary Development Commands (Use Makefile)
 ```bash
 make dev                  # Full development workflow: clean, format, lint, test, build
-make build               # Build the binary to ./bin/maze
+make build               # Build the binary to ./maze
 make install             # Build to current directory as ./maze
 make test                # Run all tests
 make test-verbose        # Run tests with verbose output
@@ -29,10 +29,15 @@ go build -o maze .
 ./maze --seed 123 --size 9       # Reproducible maze with seed
 ./maze --algorithm kruskal --size 11  # Use Kruskal's algorithm
 ./maze --algorithm wilson --size 11   # Use Wilson's algorithm
+./maze --algorithm hunt-kill --size 11 # Use Hunt-Kill algorithm
+./maze --algorithm growing-tree --size 11 # Use Growing Tree algorithm
+./maze --algorithm growing-tree --difficulty hard --size 11 # Use hard difficulty
 ./maze --format unicode --size 11     # Use Unicode box-drawing output
 ./maze --format json --size 11        # Use JSON output format
+./maze --analyze --size 11 --seed 42   # Display maze analysis
 ./maze --solution --seed 42 --size 9  # Display solution path
 ./maze -f unicode --solution --seed 42 --size 9  # Unicode with solution
+./maze -a growing-tree -d extreme --analyze --format json --size 11  # Combined features
 ./maze --help                    # Show usage information
 ```
 
