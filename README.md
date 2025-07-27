@@ -2,6 +2,8 @@
 
 A feature-rich command-line maze generator written in Go with multiple generation algorithms.
 
+[![codecov](https://codecov.io/github/buko106/go-maze/graph/badge.svg?token=1472UO1YD2)](https://codecov.io/github/buko106/go-maze)
+
 ## Version 2.0.0
 
 Complete maze generation with 5 algorithms (DFS, Kruskal's, Wilson's, Hunt-Kill, Growing Tree), multiple output formats (ASCII, Unicode, JSON), customizable difficulty levels, maze complexity analysis, customizable size, reproducible seeds, visual markers, and solution path display.
